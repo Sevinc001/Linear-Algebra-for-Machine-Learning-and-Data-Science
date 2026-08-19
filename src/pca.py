@@ -1,15 +1,13 @@
 """
 pca.py
-------
-Principal Component Analysis implemented from scratch, built entirely on
-top of the vector/matrix/eigenvalue modules in this package.
 
-PCA in four steps:
-1. Center the data (subtract the mean of each feature).
-2. Compute the covariance matrix of the centered data.
-3. Compute the eigenvalues/eigenvectors of the covariance matrix.
-4. Project the data onto the top-k eigenvectors (principal components) --
-   these are the directions of maximum variance in the data.
+PCA built entirely on top of the other modules here -- covariance_matrix
+from matrix_operations.py, eigen_decomposition from eigen.py. Wrote it
+with a fit/transform interface similar to sklearn's so it's easy to
+compare the two directly.
+
+Steps: center the data -> covariance matrix -> eigenvectors of that
+matrix (sorted by eigenvalue) -> project data onto the top-k of them.
 """
 
 import numpy as np
@@ -18,17 +16,11 @@ from eigen import eigen_decomposition
 
 
 class PCA:
-    """
-    A from-scratch Principal Component Analysis implementation, designed
-    to mirror the interface of sklearn.decomposition.PCA (fit / transform)
-    for easy side-by-side comparison.
-    """
-
     def __init__(self, n_components: int):
         self.n_components = n_components
         self.mean_ = None
         self.components_ = None          # (n_components, n_features)
-        self.explained_variance_ = None  # eigenvalues of top components
+        self.explained_variance_ = None
         self.explained_variance_ratio_ = None
 
     def fit(self, X: np.ndarray) -> "PCA":
@@ -48,7 +40,6 @@ class PCA:
             raise RuntimeError("PCA instance is not fitted yet. Call fit() first.")
         X = np.asarray(X, dtype=float)
         X_centered = X - self.mean_
-        # Project onto principal components: X_centered @ components_.T
         return matrix_multiply(X_centered, self.components_.T)
 
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
@@ -71,7 +62,7 @@ if __name__ == "__main__":
     print("My explained variance ratio:    ", my_pca.explained_variance_ratio_)
     print("Sklearn explained variance ratio:", sk_pca.explained_variance_ratio_)
 
-    # Principal component directions can point in opposite directions
-    # between implementations (sign is arbitrary) -- compare magnitudes.
+    # Sign of each component is arbitrary between implementations,
+    # so compare magnitudes rather than raw values.
     print("\nFirst 5 rows, my PCA (abs):\n", np.abs(my_result[:5]))
     print("\nFirst 5 rows, sklearn PCA (abs):\n", np.abs(sk_result[:5]))

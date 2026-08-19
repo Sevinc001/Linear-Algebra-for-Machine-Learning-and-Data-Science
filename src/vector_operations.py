@@ -1,34 +1,29 @@
 """
 vector_operations.py
----------------------
-From-scratch implementations of core vector operations, written to build
-intuition for how NumPy's built-in functions work under the hood.
 
-Each function includes a NumPy-based equivalent in its docstring for
-reference, and is validated against NumPy in the accompanying notebook.
+Basic vector ops written from scratch instead of just calling numpy,
+so I actually understand what's happening under the hood (dot product,
+norms, distance, cosine similarity). Checked against numpy in the notebook.
 """
 
 import numpy as np
 
 
 def vector_add(u: np.ndarray, v: np.ndarray) -> np.ndarray:
-    """Element-wise addition of two vectors. Equivalent to: u + v"""
+    """Element-wise add. Same as u + v, just written out manually."""
     u, v = np.asarray(u, dtype=float), np.asarray(v, dtype=float)
     _check_same_shape(u, v)
     return np.array([u[i] + v[i] for i in range(len(u))])
 
 
 def vector_scale(u: np.ndarray, scalar: float) -> np.ndarray:
-    """Scalar multiplication of a vector. Equivalent to: scalar * u"""
+    """Scalar multiply, element by element. Same as scalar * u."""
     u = np.asarray(u, dtype=float)
     return np.array([scalar * x for x in u])
 
 
 def dot_product(u: np.ndarray, v: np.ndarray) -> float:
-    """
-    Dot product of two vectors: sum(u_i * v_i).
-    Equivalent to: np.dot(u, v)
-    """
+    """sum(u_i * v_i) -- the building block for norms/distance below."""
     u, v = np.asarray(u, dtype=float), np.asarray(v, dtype=float)
     _check_same_shape(u, v)
     total = 0.0
@@ -38,27 +33,18 @@ def dot_product(u: np.ndarray, v: np.ndarray) -> float:
 
 
 def l2_norm(u: np.ndarray) -> float:
-    """
-    Euclidean (L2) norm of a vector: sqrt(sum(u_i^2)).
-    Equivalent to: np.linalg.norm(u)
-    """
+    """Vector length: sqrt(u . u). Built on dot_product on purpose."""
     return np.sqrt(dot_product(u, u))
 
 
 def l1_norm(u: np.ndarray) -> float:
-    """
-    Manhattan (L1) norm of a vector: sum(|u_i|).
-    Equivalent to: np.linalg.norm(u, ord=1)
-    """
+    """Sum of absolute values. Less sensitive to outliers than l2_norm."""
     u = np.asarray(u, dtype=float)
     return float(sum(abs(x) for x in u))
 
 
 def euclidean_distance(u: np.ndarray, v: np.ndarray) -> float:
-    """
-    Euclidean distance between two vectors: ||u - v||_2.
-    Equivalent to: np.linalg.norm(u - v)
-    """
+    """Straight-line distance between two points: ||u - v||_2."""
     u, v = np.asarray(u, dtype=float), np.asarray(v, dtype=float)
     _check_same_shape(u, v)
     diff = np.array([u[i] - v[i] for i in range(len(u))])
@@ -67,8 +53,8 @@ def euclidean_distance(u: np.ndarray, v: np.ndarray) -> float:
 
 def cosine_similarity(u: np.ndarray, v: np.ndarray) -> float:
     """
-    Cosine similarity between two vectors: (u . v) / (||u|| * ||v||)
-    Measures the angle between vectors, ignoring magnitude.
+    Angle-based similarity: (u . v) / (||u|| * ||v||). Ignores magnitude,
+    only cares about direction -- useful for comparing embeddings.
     """
     denom = l2_norm(u) * l2_norm(v)
     if np.isclose(denom, 0):

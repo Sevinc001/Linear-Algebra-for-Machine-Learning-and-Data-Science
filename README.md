@@ -99,6 +99,16 @@ Full walkthrough and plots: `notebooks/05_pca_from_scratch.ipynb`
 - scikit-learn (used only for the Iris dataset and for the final
   comparison -- not part of the implementation itself)
 
+  ## What I Learned
+
+This project helped me understand how the linear algebra concepts from the course connect to machine learning in practice.
+
+I gained a better understanding of vector and matrix operations, eigenvalues, eigenvectors, and their role in PCA.
+
+Implementing PCA from scratch helped me understand the mathematical steps behind dimensionality reduction rather than only using a library function.
+
+I also learned how to validate my implementation by comparing its results with scikit-learn.
+
 ## License
 
 MIT -- see [LICENSE](LICENSE).

@@ -1,23 +1,16 @@
 """
 eigen.py
---------
-From-scratch computation of eigenvalues and eigenvectors for symmetric
-matrices, using the QR algorithm. This is the piece PCA relies on: PCA's
-principal components are the eigenvectors of the data's covariance matrix.
 
-Method
-------
-1. QR decomposition (via Gram-Schmidt): factor A = Q @ R
-2. QR algorithm: repeatedly set A <- R @ Q. For symmetric matrices, this
-   sequence converges to a diagonal matrix whose diagonal entries are the
-   eigenvalues, while the accumulated product of Q matrices converges to
-   the matrix of eigenvectors.
+Eigenvalues/eigenvectors from scratch, using the QR algorithm. This is
+what PCA actually needs -- the principal components are just the
+eigenvectors of the covariance matrix.
 
-This method is simple to understand and works well for the symmetric,
-positive semi-definite covariance matrices that PCA uses -- it is not the
-most numerically robust general-purpose algorithm (production libraries
-like LAPACK use more sophisticated shifted variants), but it is
-transparent and sufficient for this project's purposes.
+How it works: repeatedly QR-decompose A and multiply back as R @ Q. For
+symmetric matrices this converges to a diagonal matrix (eigenvalues on
+the diagonal), and multiplying all the Q's together gives the eigenvectors.
+Not the most robust method numerically (real libraries use shifted
+variants), but it's simple enough to actually understand and it works
+fine for the covariance matrices PCA uses.
 """
 
 import numpy as np
@@ -26,10 +19,8 @@ from matrix_operations import matrix_multiply, transpose, identity
 
 def qr_decomposition(A: np.ndarray):
     """
-    Decompose A = Q @ R using the Gram-Schmidt process, where Q has
-    orthonormal columns and R is upper triangular.
-
-    Equivalent to: numpy.linalg.qr(A)
+    Gram-Schmidt QR decomposition: A = Q @ R, Q has orthonormal columns,
+    R is upper triangular. Same as numpy.linalg.qr(A).
     """
     A = np.asarray(A, dtype=float)
     n, m = A.shape
@@ -51,21 +42,8 @@ def qr_decomposition(A: np.ndarray):
 
 def eigen_decomposition(A: np.ndarray, n_iterations: int = 500, tol: float = 1e-10):
     """
-    Compute eigenvalues and eigenvectors of a symmetric matrix A using the
-    (unshifted) QR algorithm.
-
-    Parameters
-    ----------
-    A : (n, n) symmetric matrix
-    n_iterations : maximum number of QR iterations
-    tol : convergence tolerance on off-diagonal elements
-
-    Returns
-    -------
-    eigenvalues : (n,) array, sorted in descending order
-    eigenvectors : (n, n) array, columns are the corresponding eigenvectors
-
-    Equivalent to: numpy.linalg.eigh(A) (for symmetric matrices)
+    QR algorithm for symmetric matrices. Returns eigenvalues (descending)
+    and their eigenvectors as columns. Same idea as numpy.linalg.eigh.
     """
     A = np.asarray(A, dtype=float)
     if not np.allclose(A, A.T, atol=1e-8):
@@ -87,13 +65,14 @@ def eigen_decomposition(A: np.ndarray, n_iterations: int = 500, tol: float = 1e-
     eigenvalues = np.diag(A_k)
     eigenvectors = Q_total
 
-    # Sort by eigenvalue, descending (largest variance first -- matters for PCA)
+    # Sort largest eigenvalue first -- matters for PCA, since the first
+    # component should be the direction of maximum variance.
     order = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[order]
     eigenvectors = eigenvectors[:, order]
 
-    # Normalize sign convention: make the largest-magnitude entry of each
-    # eigenvector positive, for consistent, reproducible output.
+    # Eigenvectors are only defined up to sign, so pin down a consistent
+    # convention (largest entry positive) for reproducible output.
     for i in range(eigenvectors.shape[1]):
         col = eigenvectors[:, i]
         max_idx = np.argmax(np.abs(col))
@@ -105,17 +84,9 @@ def eigen_decomposition(A: np.ndarray, n_iterations: int = 500, tol: float = 1e-
 
 def power_iteration(A: np.ndarray, n_iterations: int = 1000, tol: float = 1e-10):
     """
-    Find the dominant eigenvalue/eigenvector pair of A using power iteration.
-
-    This is a simpler, more intuitive method than the QR algorithm, and is
-    included mainly to build intuition: repeatedly applying A to a vector
-    and renormalizing converges to the eigenvector of the largest-magnitude
-    eigenvalue.
-
-    Returns
-    -------
-    eigenvalue : float
-    eigenvector : (n,) array, unit norm
+    Simpler method, only finds the single dominant eigenpair: repeatedly
+    apply A to a vector and renormalize. Kept this in mostly to sanity
+    check eigen_decomposition against a second, more intuitive method.
     """
     A = np.asarray(A, dtype=float)
     n = A.shape[0]

@@ -1,19 +1,17 @@
 """
 matrix_operations.py
----------------------
-From-scratch implementations of core matrix operations and linear
-transformations, plus a general-purpose linear system solver (Gaussian
-elimination with partial pivoting) used later by the eigenvalue module.
+
+Matrix multiply, transpose, and a Gaussian elimination solver, all written
+by hand instead of using numpy directly. The solver here is basically the
+same one I wrote for a linear algebra course assignment, just cleaned up
+and made more general (partial pivoting instead of just diagonal pivots).
 """
 
 import numpy as np
 
 
 def matrix_multiply(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    """
-    Multiply two matrices A (m x n) and B (n x p) -> result (m x p).
-    Equivalent to: A @ B
-    """
+    """Standard matrix multiply, triple nested loop. Same as A @ B."""
     A, B = np.asarray(A, dtype=float), np.asarray(B, dtype=float)
     m, n = A.shape
     n2, p = B.shape
@@ -31,10 +29,7 @@ def matrix_multiply(A: np.ndarray, B: np.ndarray) -> np.ndarray:
 
 
 def transpose(A: np.ndarray) -> np.ndarray:
-    """
-    Transpose a matrix: swap rows and columns.
-    Equivalent to: A.T
-    """
+    """Swap rows/cols. Same as A.T."""
     A = np.asarray(A, dtype=float)
     m, n = A.shape
     result = np.zeros((n, m))
@@ -45,7 +40,7 @@ def transpose(A: np.ndarray) -> np.ndarray:
 
 
 def identity(n: int) -> np.ndarray:
-    """Build an n x n identity matrix. Equivalent to: np.eye(n)"""
+    """n x n identity matrix. Same as np.eye(n)."""
     I = np.zeros((n, n))
     for i in range(n):
         I[i, i] = 1.0
@@ -53,28 +48,16 @@ def identity(n: int) -> np.ndarray:
 
 
 def apply_linear_transformation(A: np.ndarray, v: np.ndarray) -> np.ndarray:
-    """
-    Apply a linear transformation (matrix A) to a vector v.
-    Equivalent to: A @ v
-    """
+    """Apply matrix A to vector v. Same as A @ v."""
     A, v = np.asarray(A, dtype=float), np.asarray(v, dtype=float)
     return matrix_multiply(A, v.reshape(-1, 1)).flatten()
 
 
 def solve_linear_system(A: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
-    Solve Ax = b using Gaussian elimination with partial pivoting.
-
-    Parameters
-    ----------
-    A : (n, n) coefficient matrix (must be square, non-singular)
-    b : (n,) right-hand side vector
-
-    Returns
-    -------
-    (n,) solution vector x
-
-    Equivalent to: np.linalg.solve(A, b)
+    Solves Ax = b with Gaussian elimination. Added partial pivoting here
+    (picks the row with the biggest value in each column before eliminating)
+    since just using the diagonal can blow up numerically on some matrices.
     """
     A = np.array(A, dtype=float, copy=True)
     b = np.array(b, dtype=float, copy=True).reshape(-1, 1)
@@ -106,12 +89,7 @@ def solve_linear_system(A: np.ndarray, b: np.ndarray) -> np.ndarray:
 
 
 def covariance_matrix(X: np.ndarray) -> np.ndarray:
-    """
-    Compute the covariance matrix of a dataset X (n_samples x n_features).
-    Each feature is first mean-centered.
-
-    Equivalent to: np.cov(X, rowvar=False)
-    """
+    """Centers each feature then computes X^T X / (n-1). Feeds into PCA later."""
     X = np.asarray(X, dtype=float)
     n_samples = X.shape[0]
     X_centered = X - X.mean(axis=0)
